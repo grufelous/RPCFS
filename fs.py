@@ -3,19 +3,31 @@ from xmlrpc.server import SimpleXMLRPCServer
 
 import os
 
-server = SimpleXMLRPCServer(('localhost', 3000), logRequests=True)
+server = SimpleXMLRPCServer(('localhost', 7000), logRequests=True)
 
-# proxy = ServerProxy('http://localhost:3000')
+proxy = ServerProxy('http://localhost:3000')
 
+def present_working_directory(dir):
+    print("Real physical path: {} ".format(os.getcwd()))
+    return os.getcwd()
 
 def list_directory(dir):
-    return os.listdir(dir)
+    pass
 
-def do_stuff(arg):
-    return arg*5
-    
+# def copy(src, dest):
+#     pass
+
+# def cat(file_name):
+#     pass
+
+# def list_directory(dir):
+#     return os.listdir(dir)
+
+# def do_stuff(arg):
+#     return arg*5
+
 server.register_function(list_directory)
-server.register_function(do_stuff)
+server.register_function(present_working_directory)
 
 def cli():
     print('fs> ')
@@ -26,6 +38,3 @@ if __name__ == '__main__':
         server.serve_forever()
     except KeyboardInterrupt:
         print("File server closed")
-    
-    
-

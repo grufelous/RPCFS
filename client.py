@@ -1,10 +1,13 @@
 from xmlrpc.client import ServerProxy
 
-proxy = ServerProxy('http://localhost:3000')
+proxy = ServerProxy('http://localhost:7000')
+
+
 
 def cli():
     print('client> ')
-    proxy.do_stuff(10)
+    # print(proxy.do_stuff(10))
+    print(proxy.present_working_directory('lol'))
 
 if __name__ == '__main__':
     cli()
