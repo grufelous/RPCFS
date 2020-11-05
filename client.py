@@ -1,10 +1,11 @@
 from xmlrpc.client import ServerProxy
 
+
 proxy = ServerProxy('http://localhost:7000')
 
 supported_commands = {
     'pwd': 0,
-    'ls': 1,
+    'ls': 0,
     'cp': 2,
     'cat': 1,
     'help': 0,
@@ -37,7 +38,7 @@ def cli():
             elif cmd == 'pwd':
                 print('{} mounted at /'.format(proxy.present_working_directory()))
             elif cmd == 'ls':
-                print(proxy.list_directory(tokens[1]))
+                print(proxy.list_directory())
             elif cmd == 'cp':
                 print(proxy.copy_file(tokens[1], tokens[2]))
             elif cmd == 'cat':

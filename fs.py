@@ -2,8 +2,8 @@ from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
 import os
-
 import shutil
+
 
 fs_port = 7000
 
@@ -14,7 +14,7 @@ proxy = ServerProxy('http://localhost:3000')
 def present_working_directory():
     return os.getcwd()
 
-def list_directory(dir):
+def list_directory():
     return os.listdir(os.getcwd())
 
 def copy_file(src, dest):
@@ -30,19 +30,25 @@ def copy_file(src, dest):
     except PermissionError:
         return 'Error: Permission denied'
     except:
-        return 'Error'
+        return 'Error while copying file'
     return (src, dest)
 
 def cat(file_name):
+    try:
+        f = open(file_name, 'r')
+        text = f.read()
+        f.close()
+        return text
+    except FileNotFoundError:
+        return 'Error: File does not exist'
+    except:
+        return 'Error while reading file'
     return file_name
 
 server.register_function(list_directory)
 server.register_function(present_working_directory)
 server.register_function(copy_file)
 server.register_function(cat)
-
-def cli():
-    print('fs> ')
 
 if __name__ == '__main__':
     if os.path.isdir('fs_{}'.format(fs_port)) == False:
