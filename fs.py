@@ -3,6 +3,8 @@ from xmlrpc.server import SimpleXMLRPCServer
 
 import os
 
+import shutil
+
 fs_port = 7000
 
 server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
@@ -14,9 +16,21 @@ def present_working_directory():
 
 def list_directory(dir):
     return os.listdir(os.getcwd())
-    # return dir
 
 def copy_file(src, dest):
+    if os.path.isfile(src) is False:
+        return 'Error: src file ({}) does not exist'.format(src)
+    try:
+        shutil.copyfile(src, dest)
+        return 'Successfully copied'
+    except shutil.SameFileError:
+        return 'Error: Can not copy to the same file'
+    except IsADirectoryError:
+        return 'Error: Copying folders not allowed'
+    except PermissionError:
+        return 'Error: Permission denied'
+    except:
+        return 'Error'
     return (src, dest)
 
 def cat(file_name):
