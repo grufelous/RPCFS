@@ -32,8 +32,18 @@ def cli():
         elif supported_commands[cmd] != len(tokens)-1:
             print('Syntax error: argument mismatch')
         else:
-            print('Success')
-    # print(proxy.present_working_directory('lol'))
+            if cmd == 'help':
+                help_message()
+            elif cmd == 'pwd':
+                print(proxy.present_working_directory())
+            elif cmd == 'ls':
+                print(proxy.list_directory(tokens[1]))
+            elif cmd == 'cp':
+                print(proxy.copy_file(tokens[1], tokens[2]))
+            elif cmd == 'cat':
+                print(proxy.cat(tokens[1]))
+            elif cmd == 'exit':
+                exit()
 
 if __name__ == '__main__':
     try:

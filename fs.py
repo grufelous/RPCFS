@@ -9,18 +9,19 @@ server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
 
 proxy = ServerProxy('http://localhost:3000')
 
-def present_working_directory(dir):
+def present_working_directory():
     print('Real physical path: {} '.format(os.getcwd()))
     return os.getcwd()
 
 def list_directory(dir):
-    return os.listdir(dir)
+    # return os.listdir(dir)
+    return dir
 
 def copy_file(src, dest):
-    pass
+    return (src, dest)
 
 def cat(file_name):
-    pass
+    return file_name
 
 server.register_function(list_directory)
 server.register_function(present_working_directory)
