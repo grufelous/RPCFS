@@ -23,7 +23,7 @@ def help_message():
 def cli():
     str_inp = input('client> ')
     tokens = ' '.join(str_inp.split(' ')).split()
-    # print(tokens)
+
     if len(tokens) == 0:
         print('Empty input')
     else:

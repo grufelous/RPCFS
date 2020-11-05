@@ -1,4 +1,3 @@
-from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
 import os
@@ -9,7 +8,6 @@ fs_port = 7000
 
 server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
 
-proxy = ServerProxy('http://localhost:3000')
 
 def present_working_directory():
     return os.getcwd()
