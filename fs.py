@@ -3,13 +3,10 @@ from xmlrpc.server import SimpleXMLRPCServer
 
 import os
 import shutil
+import sys
 
 
-fs_port = 7000
-
-server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
-
-proxy = ServerProxy('http://localhost:3000')
+coordinator_proxy = ServerProxy('http://localhost:3000')
 
 def present_working_directory():
     return os.getcwd()
@@ -45,17 +42,42 @@ def cat(file_name):
         return 'Error while reading file'
     return file_name
 
-server.register_function(list_directory)
-server.register_function(present_working_directory)
-server.register_function(copy_file)
-server.register_function(cat)
 
 if __name__ == '__main__':
+    fs_port = 7000
+    print(len(sys.argv))
+    
+    print(sys.argv)
+    
+    global server
+    
+    try:
+        if len(sys.argv) == 2:
+            try:
+                fs_port = int(sys.argv[1])
+                print(int(sys.argv[1]))
+            except ValueError:
+                print('Supply a valid port number as an integer')
+        server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
+    except OSError:
+        print('Port {} already in use or unable to create an RPC server on this port'.format(fs_port))
+        exit()
+        
+
     if os.path.isdir('fs_{}'.format(fs_port)) == False:
         os.mkdir('fs_{}'.format(fs_port))
     os.chdir('fs_{}'.format(fs_port))
+    
+    print(coordinator_proxy.add_fs(fs_port))
+    
     try:
         print('File server started at port {}'.format(fs_port))
         server.serve_forever()
     except KeyboardInterrupt:
+        print(coordinator_proxy.remove_fs(fs_port))
         print('File server terminated')
+
+server.register_function(list_directory)
+server.register_function(present_working_directory)
+server.register_function(copy_file)
+server.register_function(cat)

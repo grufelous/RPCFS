@@ -23,7 +23,7 @@ def help_message():
 def cli():
     str_inp = input('client> ')
     tokens = ' '.join(str_inp.split(' ')).split()
-    # print(tokens)
+
     if len(tokens) == 0:
         print('Empty input')
     else:
@@ -45,6 +45,7 @@ def cli():
                 print(proxy.cat(tokens[1]))
             elif cmd == 'exit':
                 exit()
+
 
 if __name__ == '__main__':
     try:
