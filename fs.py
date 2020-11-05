@@ -10,12 +10,11 @@ server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
 proxy = ServerProxy('http://localhost:3000')
 
 def present_working_directory():
-    print('Real physical path: {} '.format(os.getcwd()))
     return os.getcwd()
 
 def list_directory(dir):
-    # return os.listdir(dir)
-    return dir
+    return os.listdir(os.getcwd())
+    # return dir
 
 def copy_file(src, dest):
     return (src, dest)
@@ -32,6 +31,9 @@ def cli():
     print('fs> ')
 
 if __name__ == '__main__':
+    if os.path.isdir('fs_{}'.format(fs_port)) == False:
+        os.mkdir('fs_{}'.format(fs_port))
+    os.chdir('fs_{}'.format(fs_port))
     try:
         print('File server started at port {}'.format(fs_port))
         server.serve_forever()
