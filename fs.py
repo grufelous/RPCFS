@@ -1,5 +1,6 @@
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
+from utils.reply import Reply
 
 import os
 import shutil
@@ -10,38 +11,38 @@ coordinator_proxy = ServerProxy('http://localhost:3000')
 
 # TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
-    return os.getcwd()
+    return Reply(success=True, data=os.getcwd())
 
 def list_directory():
-    return os.listdir(os.getcwd())
+    return Reply(success=True, data=os.listdir(os.getcwd()))
 
 def copy_file(src, dest):
     if os.path.isfile(src) is False:
-        return 'Error: src file ({}) does not exist'.format(src)
+        message = 'Error: src file ({}) does not exist'.format(src)
     try:
         shutil.copyfile(src, dest)
-        return 'Successfully copied'
+        return Reply(success=True, message='Successfully copied')
     except shutil.SameFileError:
-        return 'Error: Can not copy to the same file'
+        message = 'Error: Can not copy to the same file'
     except IsADirectoryError:
-        return 'Error: Copying folders not allowed'
+        message = 'Error: Copying folders not allowed'
     except PermissionError:
-        return 'Error: Permission denied'
+        message = 'Error: Permission denied'
     except:
-        return 'Error while copying file'
-    return (src, dest)
+        message = 'Error while copying file'
+    return Reply(success=False, message=message)
 
 def cat(file_name):
     try:
         f = open(file_name, 'r')
         text = f.read()
         f.close()
-        return text
+        return Reply(success=True, data=text)
     except FileNotFoundError:
-        return 'Error: File does not exist'
+        message = 'Error: File does not exist'
     except:
-        return 'Error while reading file'
-    return file_name
+        message = 'Error while reading file'
+    return Reply(success=False, message=message)
 
 
 if __name__ == '__main__':
