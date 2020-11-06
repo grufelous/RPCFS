@@ -64,9 +64,9 @@ if __name__ == '__main__':
         exit()
         
 
-    if os.path.isdir('fs_{}'.format(fs_port)) == False:
-        os.mkdir('fs_{}'.format(fs_port))
-    os.chdir('fs_{}'.format(fs_port))
+    if os.path.isdir('/tmp/fs_{}'.format(fs_port)) == False:
+        os.mkdir('/tmp/fs_{}'.format(fs_port))
+    os.chdir('/tmp/fs_{}'.format(fs_port))
     
     print(coordinator_proxy.add_fs(fs_port))
     
