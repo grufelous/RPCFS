@@ -8,6 +8,7 @@ import sys
 
 coordinator_proxy = ServerProxy('http://localhost:3000')
 
+# TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
     return os.getcwd()
 
