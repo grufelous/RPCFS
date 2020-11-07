@@ -42,6 +42,11 @@ def cat(file_name):
         return 'Error while reading file'
     return file_name
 
+def register_fs_functions(server):
+    server.register_function(list_directory)
+    server.register_function(present_working_directory)
+    server.register_function(copy_file)
+    server.register_function(cat)
 
 if __name__ == '__main__':
     fs_port = 7000
@@ -63,10 +68,11 @@ if __name__ == '__main__':
         print('Port {} already in use or unable to create an RPC server on this port'.format(fs_port))
         exit()
         
-
     if os.path.isdir('fs_{}'.format(fs_port)) == False:
         os.mkdir('fs_{}'.format(fs_port))
     os.chdir('fs_{}'.format(fs_port))
+    
+    register_fs_functions(server)
     
     print(coordinator_proxy.add_fs(fs_port))
     
@@ -76,8 +82,3 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print(coordinator_proxy.remove_fs(fs_port))
         print('File server terminated')
-
-server.register_function(list_directory)
-server.register_function(present_working_directory)
-server.register_function(copy_file)
-server.register_function(cat)

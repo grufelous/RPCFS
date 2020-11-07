@@ -20,10 +20,14 @@ def remove_fs(fs_port):
     file_servers.remove(fs_port)
     print('Active fs: ', file_servers)
     return f'Closed fs at port {fs_port}'
+    
+def get_fs():
+    return file_servers.__str__()
 
 
 server.register_function(add_fs)
 server.register_function(remove_fs)
+server.register_function(get_fs)
 
 
 if __name__ == '__main__':

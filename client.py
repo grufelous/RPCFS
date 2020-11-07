@@ -3,6 +3,8 @@ from xmlrpc.client import ServerProxy
 
 proxy = ServerProxy('http://localhost:7000')
 
+coordinator_proxy = ServerProxy('http://localhost:3000')
+
 supported_commands = {
     'pwd': 0,
     'ls': 0,
