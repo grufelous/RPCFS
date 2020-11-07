@@ -37,13 +37,13 @@ def cli():
             if cmd == 'help':
                 help_message()
             elif cmd == 'pwd':
-                print('{} mounted at /'.format(proxy.present_working_directory()))
+                print('{} mounted at /'.format(proxy.present_working_directory())['data'])
             elif cmd == 'ls':
-                print(proxy.list_directory())
+                print(proxy.list_directory()['data'])
             elif cmd == 'cp':
-                print(proxy.copy_file(tokens[1], tokens[2]))
+                print(proxy.copy_file(tokens[1], tokens[2])['message'])
             elif cmd == 'cat':
-                print(proxy.cat(tokens[1]))
+                print(proxy.cat(tokens[1])['data'])
             elif cmd == 'exit':
                 exit()
 

@@ -3,6 +3,3 @@ class Reply():
         self.success = success
         self.data = data
         self.message = message
-    
-    def __str__(self):
-        return '{}: {} - {}'.format(self.success, self.data, self.message)
