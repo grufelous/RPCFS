@@ -1,5 +1,6 @@
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
+
 from utils.reply import Reply
 
 import os
@@ -11,7 +12,9 @@ coordinator_proxy = ServerProxy('http://localhost:3000')
 
 # TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
-    return Reply(success=True, data=os.getcwd())
+    print(Reply(success=True, data=os.getcwd()))
+    # return Reply(success=True, data=os.getcwd()).__str__()
+    return os.getcwd()
 
 def list_directory():
     return Reply(success=True, data=os.listdir(os.getcwd()))

@@ -1,5 +1,6 @@
 from xmlrpc.client import ServerProxy
 
+from utils.reply import Reply
 
 proxy = ServerProxy('http://localhost:7000')
 
