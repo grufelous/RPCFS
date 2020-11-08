@@ -2,6 +2,7 @@ from xmlrpc.client import ServerProxy
 
 from utils.reply import Reply
 
+
 proxy = ServerProxy('http://localhost:7000')
 
 supported_commands = {
@@ -13,6 +14,7 @@ supported_commands = {
     'exit': 0,
 }
 
+
 def help_message():
     print('Supported commands: ')
     print('\tpwd')
@@ -20,6 +22,7 @@ def help_message():
     print('\tcp <source_file> <destination_file>')
     print('\tcat <file>')
     print('Use full paths as needed')
+
 
 def cli():
     str_inp = input('client> ')
@@ -50,7 +53,7 @@ def cli():
 
 if __name__ == '__main__':
     try:
-        while(True):
+        while True:
             cli()
     except KeyboardInterrupt:
         print('Client terminated')
