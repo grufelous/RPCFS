@@ -1,9 +1,18 @@
+import re
+from pathlib import Path
+
 from xmlrpc.client import ServerProxy
 
 from utils.reply import Reply
 
 
-proxy = ServerProxy('http://localhost:7000')
+URI = 'http://localhost'
+COORDINATOR_PORT = 3000
+COORDINATOR = ServerProxy(f'{URI}:{COORDINATOR_PORT}')
+FILESERVERS = []
+ACTIVE_FILESERVER = None
+ROOT = Path('/')
+MOUNT_POINT = ROOT
 
 supported_commands = {
     'pwd': 0,
@@ -11,6 +20,7 @@ supported_commands = {
     'cp': 2,
     'cat': 1,
     'help': 0,
+    'cd': 1,
     'exit': 0,
 }
 
@@ -18,10 +28,61 @@ supported_commands = {
 def help_message():
     print('Supported commands: ')
     print('\tpwd')
-    print('\tls <folder_name>')
+    print('\tls')
     print('\tcp <source_file> <destination_file>')
     print('\tcat <file>')
+    print('\thelp')
+    print('\tcd')
+    print('\texit')
     print('Use full paths as needed')
+
+
+def print_list(data_list: list):
+    for element in data_list:
+        print(element)
+
+
+def pwd():
+    return str(MOUNT_POINT)
+
+
+def get_friendly_name(port: int):
+    if port is None:
+        return None
+    return f'fs_{port}'
+
+
+def get_port_from_friendly_name(name: str) -> int:
+    try:
+        port = int(re.findall(r'\d+', name)[0])
+        return port
+    except IndexError:
+        return None
+
+
+def change_active_fileserver(dir: str):
+    global FILESERVERS
+    global ACTIVE_FILESERVER
+    global MOUNT_POINT
+    path = Path(dir)
+    if ACTIVE_FILESERVER is not None and path == Path('..'):
+        ACTIVE_FILESERVER = None
+        MOUNT_POINT = ROOT
+    else:
+        port = get_port_from_friendly_name(str(path))
+        if port in FILESERVERS:
+            ACTIVE_FILESERVER = ServerProxy(f'{URI}:{port}')
+            MOUNT_POINT = Path(get_friendly_name(port))
+
+
+def is_mount_point_root() -> bool:
+    global MOUNT_POINT
+    return MOUNT_POINT == ROOT
+
+
+def update_fileservers():
+    global FILESERVERS
+    FILESERVERS = COORDINATOR.get_fs()
 
 
 def cli():
@@ -32,21 +93,28 @@ def cli():
         print('Empty input')
     else:
         cmd = tokens[0]
+        num_tokens = len(tokens) - 1
         if cmd not in supported_commands:
             print('Command not found')
-        elif supported_commands[cmd] != len(tokens)-1:
+        elif num_tokens != supported_commands[cmd]:
             print('Syntax error: argument mismatch')
         else:
             if cmd == 'help':
                 help_message()
             elif cmd == 'pwd':
-                print('{} mounted at /'.format(proxy.present_working_directory()['data']))
+                print(pwd())
             elif cmd == 'ls':
-                print(proxy.list_directory()['data'])
+                if is_mount_point_root():
+                    update_fileservers()
+                    print_list(map(get_friendly_name, FILESERVERS))
+                else:
+                    print_list(ACTIVE_FILESERVER.list_directory()['data'])
             elif cmd == 'cp':
-                print(proxy.copy_file(tokens[1], tokens[2])['message'])
+                print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
             elif cmd == 'cat':
-                print(proxy.cat(tokens[1])['data'])
+                print(ACTIVE_FILESERVER.cat(tokens[1])['data'])
+            elif cmd == 'cd':
+                change_active_fileserver(tokens[1])
             elif cmd == 'exit':
                 exit()
 
