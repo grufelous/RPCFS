@@ -57,8 +57,7 @@ def register_fs_functions(server):
     server.register_function(cat)
 
 
-def start_server_linear_probe(base_port: int, max_tries: int) -> int:
-    global server
+def start_server_linear_probe(server, base_port: int, max_tries: int) -> int:
     fs_port = base_port
     fs_port_found = False
     while fs_port_found is False and max_tries:
@@ -86,8 +85,10 @@ if __name__ == '__main__':
             print('Supply a valid base port number as an integer')
             exit()
 
+    global server
+
     max_tries = 10
-    fs_port = start_server_linear_probe(base_port, max_tries)
+    fs_port = start_server_linear_probe(server, base_port, max_tries)
     if fs_port is None:
         print('Ports already in use. Unable to create an RPC server.')
         exit()
