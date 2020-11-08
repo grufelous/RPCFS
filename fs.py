@@ -72,11 +72,14 @@ def start_server_linear_probe(base_port: int, max_tries: int) -> int:
         return None
 
 if __name__ == '__main__':
-    try:
-        base_port = int(sys.argv[1])
-    except (ValueError, IndexError):
-        print('Supply a valid base port number as an integer')
-        exit()
+    base_port = 7000
+
+    if len(sys.argv) == 2:
+        try:
+            base_port = int(sys.argv[1])
+        except ValueError:
+            print('Supply a valid base port number as an integer')
+            exit()
 
     max_tries = 10
     fs_port = start_server_linear_probe(base_port, max_tries)
