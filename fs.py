@@ -53,26 +53,39 @@ def register_fs_functions(server):
     server.register_function(copy_file)
     server.register_function(cat)
 
-if __name__ == '__main__':
-    fs_port = 7000
-    print(len(sys.argv))
-    
-    print(sys.argv)
-    
+def start_server_linear_probe(base_port: int, max_tries: int) -> int:
     global server
+    fs_port = base_port
+    fs_port_found = False
+    while fs_port_found is False and max_tries:
+        try:
+            server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
+            fs_port_found = True
+        except OSError:
+            fs_port += 1
+        finally:
+            max_tries -= 1
     
-    try:
-        if len(sys.argv) == 2:
-            try:
-                fs_port = int(sys.argv[1])
-                print(int(sys.argv[1]))
-            except ValueError:
-                print('Supply a valid port number as an integer')
-        server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
-    except OSError:
-        print('Port {} already in use or unable to create an RPC server on this port'.format(fs_port))
+    if fs_port_found:
+        return fs_port
+    else:
+        return None
+
+if __name__ == '__main__':
+    base_port = 7000
+
+    if len(sys.argv) == 2:
+        try:
+            base_port = int(sys.argv[1])
+        except ValueError:
+            print('Supply a valid base port number as an integer')
+            exit()
+
+    max_tries = 10
+    fs_port = start_server_linear_probe(base_port, max_tries)
+    if fs_port is None:
+        print('Ports already in use. Unable to create an RPC server.')
         exit()
-        
 
     if os.path.isdir('tmp/fs_{}'.format(fs_port)) == False:
         os.mkdir('tmp/fs_{}'.format(fs_port))
