@@ -1,22 +1,22 @@
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
-
 from utils.reply import Reply
-
 import os
 import shutil
 import sys
 
-
 coordinator_proxy = ServerProxy('http://localhost:3000')
+
 
 # TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
     print(Reply(success=True, data=os.getcwd()))
     return Reply(success=True, data=os.getcwd()).__str__()
 
+
 def list_directory():
     return Reply(success=True, data=os.listdir(os.getcwd()))
+
 
 def copy_file(src, dest):
     if os.path.isfile(src) is False:
@@ -33,6 +33,7 @@ def copy_file(src, dest):
     except:
         message = 'Error while copying file'
     return Reply(success=False, message=message)
+
 
 def cat(file_name):
     try:
@@ -53,6 +54,7 @@ def register_fs_functions(server):
     server.register_function(copy_file)
     server.register_function(cat)
 
+
 def start_server_linear_probe(base_port: int, max_tries: int) -> int:
     global server
     fs_port = base_port
@@ -65,11 +67,12 @@ def start_server_linear_probe(base_port: int, max_tries: int) -> int:
             fs_port += 1
         finally:
             max_tries -= 1
-    
+
     if fs_port_found:
         return fs_port
     else:
         return None
+
 
 if __name__ == '__main__':
     base_port = 7000
@@ -87,19 +90,18 @@ if __name__ == '__main__':
         print('Ports already in use. Unable to create an RPC server.')
         exit()
 
-    if os.path.isdir('tmp/fs_{}'.format(fs_port)) == False:
+    if os.path.isdir('tmp/fs_{}'.format(fs_port)) is False:
         os.mkdir('tmp/fs_{}'.format(fs_port))
         print('Made dir at ')
     os.chdir('tmp/fs_{}'.format(fs_port))
-    
+
     register_fs_functions(server)
-    
+
     print(coordinator_proxy.add_fs(fs_port))
-    
+
     try:
         print('File server started at port {}'.format(fs_port))
         server.serve_forever()
     except KeyboardInterrupt:
         print(coordinator_proxy.remove_fs(fs_port))
         print('File server terminated')
-
