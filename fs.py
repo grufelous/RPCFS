@@ -11,9 +11,8 @@ from utils.reply import Reply
 coordinator_proxy = ServerProxy('http://localhost:3000')
 
 
-# TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
-    print(Reply(success=True, data=os.getcwd()).__str__())
+    # print(Reply(success=True, data=os.getcwd()).__str__())
     return Reply(success=True, data=os.getcwd())
 
 
