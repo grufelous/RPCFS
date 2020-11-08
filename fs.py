@@ -1,9 +1,11 @@
-from xmlrpc.client import ServerProxy
-from xmlrpc.server import SimpleXMLRPCServer
-from utils.reply import Reply
 import os
 import shutil
 import sys
+
+from xmlrpc.client import ServerProxy
+from xmlrpc.server import SimpleXMLRPCServer
+
+from utils.reply import Reply
 
 coordinator_proxy = ServerProxy('http://localhost:3000')
 
