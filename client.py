@@ -40,7 +40,7 @@ def cli():
             if cmd == 'help':
                 help_message()
             elif cmd == 'pwd':
-                print('{} mounted at /'.format(proxy.present_working_directory())['data'])
+                print('{} mounted at /'.format(proxy.present_working_directory()['data']))
             elif cmd == 'ls':
                 print(proxy.list_directory()['data'])
             elif cmd == 'cp':

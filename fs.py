@@ -12,8 +12,8 @@ coordinator_proxy = ServerProxy('http://localhost:3000')
 
 # TODO: This returns "/tmp/fs_<port>"
 def present_working_directory():
-    print(Reply(success=True, data=os.getcwd()))
-    return Reply(success=True, data=os.getcwd()).__str__()
+    print(Reply(success=True, data=os.getcwd()).__str__())
+    return Reply(success=True, data=os.getcwd())
 
 
 def list_directory():
@@ -93,10 +93,10 @@ if __name__ == '__main__':
         print('Ports already in use. Unable to create an RPC server.')
         exit()
 
-    if os.path.isdir('tmp/fs_{}'.format(fs_port)) is False:
-        os.mkdir('tmp/fs_{}'.format(fs_port))
+    if os.path.isdir('fs_{}'.format(fs_port)) is False:
+        os.mkdir('fs_{}'.format(fs_port))
         print('Made dir at ')
-    os.chdir('tmp/fs_{}'.format(fs_port))
+    os.chdir('fs_{}'.format(fs_port))
 
     register_fs_functions(server)
 
