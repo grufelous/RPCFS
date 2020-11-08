@@ -12,7 +12,7 @@ COORDINATOR = ServerProxy(f'{URI}:{COORDINATOR_PORT}')
 FILESERVERS = []
 ACTIVE_FILESERVER = None
 ROOT = Path('/')
-MOUNT_POINT = ROOT
+ACTIVE_DIRECTORY = ROOT
 
 supported_commands = {
     'pwd': 0,
@@ -43,7 +43,7 @@ def print_list(data_list: list):
 
 
 def pwd():
-    return str(MOUNT_POINT)
+    return str(ACTIVE_DIRECTORY)
 
 
 def get_friendly_name(port: int):
@@ -63,21 +63,21 @@ def get_port_from_friendly_name(name: str) -> int:
 def change_active_fileserver(dir: str):
     global FILESERVERS
     global ACTIVE_FILESERVER
-    global MOUNT_POINT
+    global ACTIVE_DIRECTORY
     path = Path(dir)
     if ACTIVE_FILESERVER is not None and path == Path('..'):
         ACTIVE_FILESERVER = None
-        MOUNT_POINT = ROOT
+        ACTIVE_DIRECTORY = ROOT
     else:
         port = get_port_from_friendly_name(str(path))
         if port in FILESERVERS:
             ACTIVE_FILESERVER = ServerProxy(f'{URI}:{port}')
-            MOUNT_POINT = Path(get_friendly_name(port))
+            ACTIVE_DIRECTORY = Path(get_friendly_name(port))
 
 
 def is_mount_point_root() -> bool:
-    global MOUNT_POINT
-    return MOUNT_POINT == ROOT
+    global ACTIVE_DIRECTORY
+    return ACTIVE_DIRECTORY == ROOT
 
 
 def update_fileservers():
