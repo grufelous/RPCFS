@@ -109,10 +109,14 @@ def cli():
                     print_list(map(get_friendly_name, FILESERVERS))
                 else:
                     print_list(ACTIVE_FILESERVER.list_directory()['data'])
-            elif cmd == 'cp':
+            elif cmd == 'cp' and ACTIVE_FILESERVER:
                 print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
-            elif cmd == 'cat':
-                print(ACTIVE_FILESERVER.cat(tokens[1])['data'])
+            elif cmd == 'cat' and ACTIVE_FILESERVER:
+                cat_reply = dict(ACTIVE_FILESERVER.cat(tokens[1]))
+                if cat_reply['success'] is True:
+                    print(cat_reply['data'])
+                else:
+                    print(cat_reply['message'])
             elif cmd == 'cd':
                 change_active_fileserver(tokens[1])
             elif cmd == 'exit':
