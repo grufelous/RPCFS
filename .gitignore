@@ -134,3 +134,4 @@ dmypy.json
 # Temp folders for the project
 fs_*/
 tmp/
+mnt/
