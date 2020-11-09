@@ -69,12 +69,20 @@ def register_fs_functions(server):
     server.register_function(test)
 
 
-def generate_server_key():
+def set_server_key(fs_port_offset):
     global KEY_BS
     global KEY_BS_SUITE
-    KEY_BS = Fernet.generate_key()
+
+    with open('keys/fs_keys.txt', 'r') as fs_keys:
+        for i, line in enumerate(fs_keys):
+            if i == fs_port_offset:
+                KEY_BS = line.rstrip().encode()
+
     print(f'Key for server: {KEY_BS}')
     KEY_BS_SUITE = Fernet(KEY_BS)
+    # enc = KEY_BS_SUITE.encrypt('abc'.encode())
+    # dec = KEY_BS_SUITE.decrypt(enc).decode()
+    # print(dec)
 
 
 if __name__ == '__main__':
@@ -103,6 +111,8 @@ if __name__ == '__main__':
     if fs_port_found is False:
         print('Ports already in use. Unable to create an RPC server.')
         exit()
+
+    set_server_key(fs_port % 10)
 
     if os.path.isdir('fs_{}'.format(fs_port)) is False:
         os.mkdir('fs_{}'.format(fs_port))

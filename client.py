@@ -1,6 +1,8 @@
 import re
 from pathlib import Path
 
+import sys
+
 from xmlrpc.client import ServerProxy
 
 from cryptography.fernet import Fernet
@@ -130,17 +132,33 @@ def cli():
                 print(ACTIVE_FILESERVER.test(tokens[1]))
 
 
-def generate_client_key():
+def set_client_key(client_offset):
     global KEY_AS
     global KEY_AS_SUITE
-    KEY_AS = Fernet.generate_key()
+    with open('keys/client_keys.txt', 'r') as client_keys:
+        for i, line in enumerate(client_keys):
+            if i == client_offset:
+                KEY_AS = line.rstrip().encode()
+
     print(f'Key for client: {KEY_AS}')
     KEY_AS_SUITE = Fernet(KEY_AS)
+    # enc = KEY_AS_SUITE.encrypt('abc'.encode())
+    # dec = KEY_AS_SUITE.decrypt(enc).decode()
+    # print(dec)
 
 
 if __name__ == '__main__':
+    client_offset = 0
+
+    if len(sys.argv) == 2:
+        try:
+            client_offset = int(sys.argv[1])
+        except ValueError:
+            print('Supply a valid client offset')
+            exit()
+
     try:
-        generate_client_key()
+        set_client_key(client_offset % 10)
         while True:
             cli()
     except KeyboardInterrupt:
