@@ -4,12 +4,11 @@ from pathlib import Path
 from xmlrpc.client import ServerProxy
 
 from utils.reply import Reply
+from utils.config import URI, COORDINATOR_LOCATION
 
 
-URI = 'http://localhost'
-COORDINATOR_PORT = 3000
-COORDINATOR = ServerProxy(f'{URI}:{COORDINATOR_PORT}')
-FILESERVERS = []
+COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
+FILESERVERS = list()
 ACTIVE_FILESERVER = None
 ROOT = Path('/')
 ACTIVE_DIRECTORY = ROOT

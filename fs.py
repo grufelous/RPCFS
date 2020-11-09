@@ -7,8 +7,10 @@ import shutil
 import sys
 
 from utils.reply import Reply
+from utils.config import COORDINATOR_LOCATION
 
-coordinator_proxy = ServerProxy('http://localhost:3000')
+
+COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
 
 
 def present_working_directory():
@@ -90,11 +92,11 @@ if __name__ == '__main__':
 
     register_fs_functions(server)
 
-    print(coordinator_proxy.add_fs(fs_port))
+    print(COORDINATOR.add_fs(fs_port))
 
     try:
         print('File server started at port {}'.format(fs_port))
         server.serve_forever()
     except KeyboardInterrupt:
-        print(coordinator_proxy.remove_fs(fs_port))
+        print(COORDINATOR.remove_fs(fs_port))
         print('File server terminated')
