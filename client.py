@@ -137,6 +137,7 @@ def get_session_key(nonce=42):
     return (ses_key, for_fs)
 
 
+# def encrypt_for_ses()
 def cli():
     str_inp = input('client> ')
     tokens = ' '.join(str_inp.split(' ')).split()
@@ -162,7 +163,18 @@ def cli():
                 else:
                     print_list(ACTIVE_FILESERVER.list_directory()['data'])
             elif cmd == 'cp' and ACTIVE_FILESERVER:
-                print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
+                (ses_key, enc_ses_key) = get_session_key()
+                ses_suite = Fernet(ses_key)
+                file_1 = ses_suite.encrypt(tokens[1].encode())
+                file_2 = ses_suite.encrypt(tokens[2].encode())
+                nonce2 = ses_suite.encrypt('69'.encode())
+                resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce2, enc_ses_key)
+                msg = resp['message']
+                nonce_recv = resp['nonce']
+                # msg = ses_suite.decrypt(f'{msg}'.encode()).decode()
+                # nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
+                print(msg, nonce_recv)
+                # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
             elif cmd == 'cat' and ACTIVE_FILESERVER:
                 cat_reply = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                 if cat_reply['success'] is True:
