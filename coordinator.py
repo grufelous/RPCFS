@@ -1,9 +1,10 @@
 from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
+from utils.config import LOCALHOST, COORDINATOR_PORT
 
-SERVER = SimpleXMLRPCServer(('localhost', 3000), logRequests=True)
 
+SERVER = SimpleXMLRPCServer((LOCALHOST, COORDINATOR_PORT), logRequests=True)
 FILESERVERS = list()
 
 
