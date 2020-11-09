@@ -181,6 +181,8 @@ def cli():
                 file_arg = ses_suite.encrypt(tokens[1].encode())
                 nonce2 = ses_suite.encrypt('69'.encode())
                 cat_resp = dict(ACTIVE_FILESERVER.cat(file_arg, nonce2, enc_ses_key))
+                # nonce_recv = cat_resp['nonce']
+                # nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
                 # cat_resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                 if cat_resp['success'] is True:
                     dec_data = cat_resp['data']

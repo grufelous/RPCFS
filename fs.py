@@ -70,7 +70,8 @@ def cat(file_arg, nonce, payload_ses):
     except Exception:
         message = 'Error while reading file'
     message = ses_suite.encrypt(message.encode())
-    return Reply(success=False, message=message)
+    nonce = ses_suite.encrypt(dec_nonce.encode())
+    return Reply(success=False, message=message, nonce=nonce)
 
 
 def extract_ses_key(payload_ses):
