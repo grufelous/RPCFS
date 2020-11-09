@@ -33,11 +33,14 @@ def copy_file(f1, f2, nonce, payload_ses):
     dest = ses_suite.decrypt(f'{f2}'.encode()).decode()
     dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
     print(f'src: {src}, dest: {dest}, nonce: {dec_nonce}')
+    success = False
     if os.path.isfile(src) is False:
         message = 'Error: src file ({}) does not exist'.format(src)
     try:
         shutil.copyfile(src, dest)
-        return Reply(success=True, message='Successfully copied', nonce=dec_nonce)
+        message = 'Successfully copied'
+        success = True
+        # return Reply(success=True, message='Successfully copied', nonce=dec_nonce)
     except shutil.SameFileError:
         message = 'Error: Can not copy to the same file'
     except IsADirectoryError:
@@ -46,9 +49,9 @@ def copy_file(f1, f2, nonce, payload_ses):
         message = 'Error: Permission denied'
     except Exception:
         message = 'Error while copying file'
-    # message = ses_suite.encrypt(message.encode())
-    # nonce = ses_suite.encrypt(nonce.encode())
-    return Reply(success=False, message=message, nonce=dec_nonce)
+    message = ses_suite.encrypt(message.encode())
+    nonce = ses_suite.encrypt(dec_nonce.encode())
+    return Reply(success=success, message=message, nonce=nonce)
 
 
 def cat(file_name):

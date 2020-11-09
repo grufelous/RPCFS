@@ -171,11 +171,12 @@ def cli():
                 resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce2, enc_ses_key)
                 msg = resp['message']
                 nonce_recv = resp['nonce']
-                # msg = ses_suite.decrypt(f'{msg}'.encode()).decode()
-                # nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
+                msg = ses_suite.decrypt(f'{msg}'.encode()).decode()
+                nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
                 print(msg, nonce_recv)
                 # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
             elif cmd == 'cat' and ACTIVE_FILESERVER:
+                # ()
                 cat_reply = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                 if cat_reply['success'] is True:
                     print(cat_reply['data'])
