@@ -176,12 +176,20 @@ def cli():
                 print(msg, nonce_recv)
                 # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
             elif cmd == 'cat' and ACTIVE_FILESERVER:
-                # ()
-                cat_reply = dict(ACTIVE_FILESERVER.cat(tokens[1]))
-                if cat_reply['success'] is True:
-                    print(cat_reply['data'])
+                (ses_key, enc_ses_key) = get_session_key()
+                ses_suite = Fernet(ses_key)
+                file_arg = ses_suite.encrypt(tokens[1].encode())
+                nonce2 = ses_suite.encrypt('69'.encode())
+                cat_resp = dict(ACTIVE_FILESERVER.cat(file_arg, nonce2, enc_ses_key))
+                # cat_resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
+                if cat_resp['success'] is True:
+                    dec_data = cat_resp['data']
+                    dec_data = ses_suite.decrypt(f'{dec_data}'.encode()).decode()
+                    print(dec_data)
                 else:
-                    print(cat_reply['message'])
+                    dec_msg = cat_resp['message']
+                    dec_msg = ses_suite.decrypt(f'{dec_msg}'.encode()).decode()
+                    print(dec_msg)
             elif cmd == 'cd':
                 change_active_fileserver(tokens[1])
             elif cmd == 'exit':

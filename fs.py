@@ -54,16 +54,22 @@ def copy_file(f1, f2, nonce, payload_ses):
     return Reply(success=success, message=message, nonce=nonce)
 
 
-def cat(file_name):
+def cat(file_arg, nonce, payload_ses):
+    (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    file_name = ses_suite.decrypt(f'{file_arg}'.encode()).decode()
+    dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    success = False
     try:
         f = open(file_name, 'r')
         text = f.read()
         f.close()
-        return Reply(success=True, data=text)
+        text_enc = ses_suite.encrypt(text.encode())
+        return Reply(success=True, data=text_enc)
     except FileNotFoundError:
         message = 'Error: File does not exist'
     except Exception:
         message = 'Error while reading file'
+    message = ses_suite.encrypt(message.encode())
     return Reply(success=False, message=message)
 
 
