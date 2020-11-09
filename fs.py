@@ -57,8 +57,23 @@ def cat(file_name):
     return Reply(success=False, message=message)
 
 
-def test(text):
-    print(text)
+def extract_ses_key(payload_ses):
+    ses_key_recv = payload_ses['key_ab']
+    ses_key = KEY_BS_SUITE.decrypt(f'{ses_key_recv}'.encode()).decode()
+    print('Kab: ', ses_key)
+    return (ses_key, Fernet(ses_key))
+
+
+def test(payload_arg, payload_ses):
+    print(payload_ses)
+    # nonce_recv = payload_arg['nonce']
+    (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    pay_arg_dec = ses_suite.decrypt(f'{payload_arg}'.encode()).decode()
+    print(pay_arg_dec)
+    test_resp = {
+        'pay_arg': pay_arg_dec
+    }
+    return test_resp
 
 
 def register_fs_functions(server):
@@ -73,10 +88,13 @@ def set_server_key(fs_port_offset):
     global KEY_BS
     global KEY_BS_SUITE
 
-    with open('keys/fs_keys.txt', 'r') as fs_keys:
-        for i, line in enumerate(fs_keys):
-            if i == fs_port_offset:
-                KEY_BS = line.rstrip().encode()
+    try:
+        with open('keys/fs_keys.txt', 'r') as fs_keys:
+            for i, line in enumerate(fs_keys):
+                if i == fs_port_offset:
+                    KEY_BS = line.rstrip().encode()
+    except OSError:
+        print('Unable to read fs_keys')
 
     print(f'Key for server: {KEY_BS}')
     KEY_BS_SUITE = Fernet(KEY_BS)
