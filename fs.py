@@ -6,11 +6,16 @@ import os
 import shutil
 import sys
 
+from cryptography.fernet import Fernet
+
 from utils.reply import Reply
 from utils.config import COORDINATOR_LOCATION
 
 
 COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
+
+KEY_BS = 0
+KEY_BS_SUITE = None
 
 
 def present_working_directory():
@@ -52,11 +57,24 @@ def cat(file_name):
     return Reply(success=False, message=message)
 
 
+def test(text):
+    print(text)
+
+
 def register_fs_functions(server):
     server.register_function(list_directory)
     server.register_function(present_working_directory)
     server.register_function(copy_file)
     server.register_function(cat)
+    server.register_function(test)
+
+
+def generate_server_key():
+    global KEY_BS
+    global KEY_BS_SUITE
+    KEY_BS = Fernet.generate_key()
+    print(f'Key for server: {KEY_BS}')
+    KEY_BS_SUITE = Fernet(KEY_BS)
 
 
 if __name__ == '__main__':

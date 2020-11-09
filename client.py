@@ -3,6 +3,8 @@ from pathlib import Path
 
 from xmlrpc.client import ServerProxy
 
+from cryptography.fernet import Fernet
+
 from utils.reply import Reply
 from utils.config import URI, COORDINATOR_LOCATION
 
@@ -13,6 +15,9 @@ ACTIVE_FILESERVER = None
 ROOT = Path('/')
 ACTIVE_DIRECTORY = ROOT
 
+KEY_AS = 0
+KEY_AS_SUITE = None
+
 supported_commands = {
     'pwd': 0,
     'ls': 0,
@@ -21,6 +26,7 @@ supported_commands = {
     'help': 0,
     'cd': 1,
     'exit': 0,
+    'test': 1,
 }
 
 
@@ -120,10 +126,21 @@ def cli():
                 change_active_fileserver(tokens[1])
             elif cmd == 'exit':
                 exit()
+            elif cmd == 'test':
+                print(ACTIVE_FILESERVER.test(tokens[1]))
+
+
+def generate_client_key():
+    global KEY_AS
+    global KEY_AS_SUITE
+    KEY_AS = Fernet.generate_key()
+    print(f'Key for client: {KEY_AS}')
+    KEY_AS_SUITE = Fernet(KEY_AS)
 
 
 if __name__ == '__main__':
     try:
+        generate_client_key()
         while True:
             cli()
     except KeyboardInterrupt:
