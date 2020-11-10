@@ -58,19 +58,19 @@ def cat(file_arg, nonce, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
     file_name = ses_suite.decrypt(f'{file_arg}'.encode()).decode()
     dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    nonce = ses_suite.encrypt(dec_nonce.encode())
     success = False
     try:
         f = open(file_name, 'r')
         text = f.read()
         f.close()
         text_enc = ses_suite.encrypt(text.encode())
-        return Reply(success=True, data=text_enc)
+        return Reply(success=True, data=text_enc, nonce=nonce)
     except FileNotFoundError:
         message = 'Error: File does not exist'
     except Exception:
         message = 'Error while reading file'
     message = ses_suite.encrypt(message.encode())
-    nonce = ses_suite.encrypt(dec_nonce.encode())
     return Reply(success=False, message=message, nonce=nonce)
 
 
