@@ -63,14 +63,14 @@ def read_keys():
             for i, line in enumerate(fs_keys):
                 FS_KEYS.append(line.rstrip().encode())
     except OSError:
-        print('Unable to read fs_keys')
+        print('Coordinator unable to read fs_keys')
 
     try:
         with open('keys/client_keys.txt', 'r') as client_keys:
             for i, line in enumerate(client_keys):
                 CLIENT_KEYS.append(line.rstrip().encode())
     except OSError:
-        print('Unable to read client_keys')
+        print('Coordinator unable to read client_keys')
 
 
 if __name__ == '__main__':
@@ -80,8 +80,6 @@ if __name__ == '__main__':
     SERVER.register_function(get_enc_session_key)
 
     read_keys()
-    print(FS_KEYS)
-    print(CLIENT_KEYS)
 
     try:
         print('Central coordinator started at port 3000')

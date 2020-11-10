@@ -3,6 +3,8 @@ from pathlib import Path
 
 import sys
 
+import secrets
+
 from xmlrpc.client import ServerProxy
 
 from cryptography.fernet import Fernet
@@ -98,42 +100,47 @@ def update_fileservers():
     FILESERVERS = COORDINATOR.get_fs()
 
 
+def verify_nonce(sent_nonce: int, received_nonce: str) -> bool:
+    try:
+        received_nonce = int(received_nonce)
+    except TypeError:
+        print('Nonce is NaN')
+    finally:
+        return sent_nonce == received_nonce
+
+
 def get_session_key(nonce=42):
     global OFFSET_A
     global ACTIVE_PORT
     if ACTIVE_PORT == 0:
         print('No active server')
         return
+    nonce = secrets.randbelow(100)
+    # print(f'Chosen nonce: {nonce}')
     ses = COORDINATOR.get_enc_session_key(OFFSET_A, ACTIVE_PORT, nonce)
     ses = dict(ses)
+
     for_client = ses['for_a']
     port_b_recv = for_client['port_b']
     ses_key_recv = for_client['key_ab']
     nonce_recv = for_client['nonce']
-    # print('PB: ', port_b_recv)
-    # print('Ses: ', ses_key_recv)
 
     ses_key = KEY_AS_SUITE.decrypt(f'{ses_key_recv}'.encode()).decode()
     port_b = KEY_AS_SUITE.decrypt(f'{port_b_recv}'.encode()).decode()
     nonce_dec = KEY_AS_SUITE.decrypt(f'{nonce_recv}'.encode()).decode()
-    print(port_b)
-    print(type(port_b))
-    print(f'Nonce dec: {nonce_dec}')
-    try:
-        port_b = int(port_b)
-    except TypeError:
-        print('Port is NaN')
-    finally:
-        if(port_b != ACTIVE_PORT):
-            print('Active port changed or imposter detected')
-            # return (None, None)
-            exit()
-    print(f'PBR: {port_b}')
-    print(f'Kab: {ses_key}')
-    # port_b = KEY_AS_SUITE.decrypt(for_client['port_b'])
-    # print(f'Received port b: {port_b}')
+    # print(f'Nonce dec: {nonce_dec}')
+    nonce_ok = verify_nonce(nonce, nonce_dec)
+    if nonce_ok is True:
+        print('Nonce verified for coordinator/client phase')
+    else:
+        print('Nonce not verified for coordinator/client phase.')
+        print('Imposter detected')
+        print('Venting')
+        exit()
+    print(f'Session key Kab: {ses_key}')
+
     for_fs = ses['for_b']
-    print(ses)
+    # print(ses)
     return (ses_key, for_fs)
 
 
