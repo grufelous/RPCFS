@@ -101,12 +101,24 @@ def update_fileservers():
 
 
 def verify_nonce(sent_nonce: int, received_nonce: str) -> bool:
+    # print(f'sent: {sent_nonce}, recv: {received_nonce}')
     try:
         received_nonce = int(received_nonce)
     except TypeError:
         print('Nonce is NaN')
     finally:
         return sent_nonce == received_nonce
+
+
+def verify_nonce_handler(sent_nonce: int, received_nonce: str, is_coord: bool = False):
+    b = 'coordinator' if is_coord else 'client'
+    if verify_nonce(sent_nonce, received_nonce) is True:
+        print(f'Nonce verified for client/{b} phase')
+    else:
+        print(f'Nonce not verified for client/{b} phase')
+        print('Imposter detected')
+        print('Venting')
+        exit()
 
 
 def get_session_key(nonce=42):
@@ -116,7 +128,7 @@ def get_session_key(nonce=42):
         print('No active server')
         return
     nonce = secrets.randbelow(100)
-    # print(f'Chosen nonce: {nonce}')
+
     ses = COORDINATOR.get_enc_session_key(OFFSET_A, ACTIVE_PORT, nonce)
     ses = dict(ses)
 
@@ -128,16 +140,10 @@ def get_session_key(nonce=42):
     ses_key = KEY_AS_SUITE.decrypt(f'{ses_key_recv}'.encode()).decode()
     port_b = KEY_AS_SUITE.decrypt(f'{port_b_recv}'.encode()).decode()
     nonce_dec = KEY_AS_SUITE.decrypt(f'{nonce_recv}'.encode()).decode()
-    # print(f'Nonce dec: {nonce_dec}')
-    nonce_ok = verify_nonce(nonce, nonce_dec)
-    if nonce_ok is True:
-        print('Nonce verified for coordinator/client phase')
-    else:
-        print('Nonce not verified for coordinator/client phase.')
-        print('Imposter detected')
-        print('Venting')
-        exit()
-    print(f'Session key Kab: {ses_key}')
+
+    verify_nonce_handler(nonce, nonce_dec, True)
+
+    print(f'Session key (Kab): {ses_key}')
 
     for_fs = ses['for_b']
     # print(ses)
@@ -161,54 +167,71 @@ def cli():
         else:
             if cmd == 'help':
                 help_message()
+
             elif cmd == 'pwd':
                 print(pwd())
+
             elif cmd == 'ls':
                 if is_mount_point_root():
                     update_fileservers()
                     print_list(map(get_friendly_name, FILESERVERS))
                 else:
                     print_list(ACTIVE_FILESERVER.list_directory()['data'])
+
             elif cmd == 'cp' and ACTIVE_FILESERVER:
                 (ses_key, enc_ses_key) = get_session_key()
                 ses_suite = Fernet(ses_key)
                 file_1 = ses_suite.encrypt(tokens[1].encode())
                 file_2 = ses_suite.encrypt(tokens[2].encode())
-                nonce2 = ses_suite.encrypt('69'.encode())
-                resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce2, enc_ses_key)
-                msg = resp['message']
-                nonce_recv = resp['nonce']
-                msg = ses_suite.decrypt(f'{msg}'.encode()).decode()
-                nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
-                print(msg, nonce_recv)
+                nonce2 = secrets.randbelow(100)
+                nonce_enc = ses_suite.encrypt(f'{nonce2}'.encode())
+
+                resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, enc_ses_key)
+
+                msg_enc = resp['message']
+                nonce_recv_enc = resp['nonce']
+                msg = ses_suite.decrypt(f'{msg_enc}'.encode()).decode()
+                nonce_recv = ses_suite.decrypt(f'{nonce_recv_enc}'.encode()).decode()
+
+                verify_nonce_handler(nonce2, nonce_recv)
+
+                print(msg)
                 # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
+
             elif cmd == 'cat' and ACTIVE_FILESERVER:
                 (ses_key, enc_ses_key) = get_session_key()
                 ses_suite = Fernet(ses_key)
                 file_arg = ses_suite.encrypt(tokens[1].encode())
-                nonce2 = ses_suite.encrypt('69'.encode())
-                cat_resp = dict(ACTIVE_FILESERVER.cat(file_arg, nonce2, enc_ses_key))
-                # nonce_recv = cat_resp['nonce']
-                # nonce_recv = ses_suite.decrypt(f'{nonce_recv}'.encode()).decode()
-                # cat_resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
-                if cat_resp['success'] is True:
-                    dec_data = cat_resp['data']
+                nonce2 = secrets.randbelow(100)
+                nonce_enc = ses_suite.encrypt(f'{nonce2}'.encode())
+
+                resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
+                # nonce_recv = resp['nonce']
+                nonce_recv_enc = resp['nonce']
+                nonce_recv = ses_suite.decrypt(f'{nonce_recv_enc}'.encode()).decode()
+
+                verify_nonce_handler(nonce2, nonce_recv)
+
+                # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
+                if resp['success'] is True:
+                    dec_data = resp['data']
                     dec_data = ses_suite.decrypt(f'{dec_data}'.encode()).decode()
                     print(dec_data)
                 else:
-                    dec_msg = cat_resp['message']
+                    dec_msg = resp['message']
                     dec_msg = ses_suite.decrypt(f'{dec_msg}'.encode()).decode()
                     print(dec_msg)
+
             elif cmd == 'cd':
                 change_active_fileserver(tokens[1])
+
             elif cmd == 'exit':
                 exit()
+
             elif cmd == 'test':
                 (ses_key, enc_ses_key) = get_session_key()
-                print('S: ', ses_key)
                 ses_suite = Fernet(ses_key)
                 payload_arg = ses_suite.encrypt(tokens[1].encode())
-                # payload_nonce = ses_suite.encrypt(enc_ses_key)
                 recv_dict = ACTIVE_FILESERVER.test(payload_arg, enc_ses_key)
                 print(recv_dict)
 

@@ -18,8 +18,11 @@ KEY_BS = 0
 KEY_BS_SUITE = None
 
 
+def nonce_mod(nonce):
+    return nonce
+
+
 def present_working_directory():
-    # print(Reply(success=True, data=os.getcwd()).__str__())
     return Reply(success=True, data=os.getcwd())
 
 
@@ -29,11 +32,16 @@ def list_directory():
 
 def copy_file(f1, f2, nonce, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+
     src = ses_suite.decrypt(f'{f1}'.encode()).decode()
     dest = ses_suite.decrypt(f'{f2}'.encode()).decode()
     dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    dec_nonce = nonce_mod(dec_nonce)
+
     print(f'src: {src}, dest: {dest}, nonce: {dec_nonce}')
+
     success = False
+
     if os.path.isfile(src) is False:
         message = 'Error: src file ({}) does not exist'.format(src)
     try:
@@ -56,10 +64,15 @@ def copy_file(f1, f2, nonce, payload_ses):
 
 def cat(file_arg, nonce, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+
     file_name = ses_suite.decrypt(f'{file_arg}'.encode()).decode()
     dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    dec_nonce = nonce_mod(dec_nonce)
+
     nonce = ses_suite.encrypt(dec_nonce.encode())
+
     success = False
+
     try:
         f = open(file_name, 'r')
         text = f.read()
