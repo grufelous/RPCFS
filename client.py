@@ -164,9 +164,9 @@ def cli():
         cmd = tokens[0]
         num_tokens = len(tokens) - 1
         if cmd not in supported_commands:
-            print('Command not found')
+            print(f'{cmd}: Command not found')
         elif num_tokens != supported_commands[cmd]:
-            print('Syntax error: argument mismatch')
+            print(f'Syntax error: {cmd}: argument mismatch')
         else:
             if cmd == 'help':
                 help_message()
