@@ -129,9 +129,6 @@ def set_server_key(fs_port_offset):
 
     print(f'Key for server: {KEY_BS}')
     KEY_BS_SUITE = Fernet(KEY_BS)
-    # enc = KEY_BS_SUITE.encrypt('abc'.encode())
-    # dec = KEY_BS_SUITE.decrypt(enc).decode()
-    # print(dec)
 
 
 if __name__ == '__main__':
@@ -163,16 +160,16 @@ if __name__ == '__main__':
 
     set_server_key(fs_port % 10)
 
-    if os.path.isdir('fs_{}'.format(fs_port)) is False:
-        os.mkdir('fs_{}'.format(fs_port))
-    os.chdir('fs_{}'.format(fs_port))
+    if os.path.isdir(f'fs_{fs_port}') is False:
+        os.mkdir(f'fs_{fs_port}')
+    os.chdir(f'fs_{fs_port}')
 
     register_fs_functions(server)
 
     print(COORDINATOR.add_fs(fs_port))
 
     try:
-        print('File server started at port {}'.format(fs_port))
+        print(f'File server started at port {fs_port}')
         server.serve_forever()
     except KeyboardInterrupt:
         print(COORDINATOR.remove_fs(fs_port))
