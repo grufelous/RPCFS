@@ -86,7 +86,9 @@ def change_active_fileserver(dir: str):
         ACTIVE_PORT = 0
     else:
         port = get_port_from_friendly_name(str(path))
-        if port in FILESERVERS:
+        if port is None:
+            print(f'{dir}: Directory does not exist')
+        elif port in FILESERVERS:
             ACTIVE_FILESERVER = ServerProxy(f'{URI}:{port}')
             ACTIVE_DIRECTORY = Path(get_friendly_name(port))
             ACTIVE_PORT = port
