@@ -89,8 +89,8 @@ def cat(file_arg, nonce, payload_ses):
 
 
 def extract_ses_key(payload_ses):
-    ses_key_recv = payload_ses['key_ab']
-    ses_key = KEY_BS_SUITE.decrypt(encode_data(ses_key_recv)).decode()
+    ses_key_enc = payload_ses['key_ab']
+    ses_key = KEY_BS_SUITE.decrypt(encode_data(ses_key_enc)).decode()
     print('Kab: ', ses_key)
     return (ses_key, Fernet(ses_key))
 
