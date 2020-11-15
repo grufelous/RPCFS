@@ -133,7 +133,6 @@ def get_session_key(nonce=42):
     nonce = secrets.randbelow(100)
 
     ses = COORDINATOR.get_enc_session_key(OFFSET_A, ACTIVE_PORT, nonce)
-    ses = dict(ses)
 
     for_client = ses['for_a']
     port_b_recv = for_client['port_b']
