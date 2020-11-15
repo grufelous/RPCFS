@@ -11,6 +11,7 @@ from cryptography.fernet import Fernet
 
 from utils.reply import Reply
 from utils.config import URI, COORDINATOR_LOCATION
+from utils.fernet_helper import encode_data, decode_data
 
 
 COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
@@ -137,9 +138,9 @@ def get_session_key(nonce=42):
     ses_key_recv = for_client['key_ab']
     nonce_recv = for_client['nonce']
 
-    ses_key = KEY_AS_SUITE.decrypt(f'{ses_key_recv}'.encode()).decode()
-    port_b = KEY_AS_SUITE.decrypt(f'{port_b_recv}'.encode()).decode()
-    nonce_dec = KEY_AS_SUITE.decrypt(f'{nonce_recv}'.encode()).decode()
+    ses_key = KEY_AS_SUITE.decrypt(encode_data(ses_key_recv)).decode()
+    port_b = KEY_AS_SUITE.decrypt(encode_data(port_b_recv)).decode()
+    nonce_dec = KEY_AS_SUITE.decrypt(encode_data(nonce_recv)).decode()
 
     verify_nonce_handler(nonce, nonce_dec, True)
 
@@ -181,17 +182,17 @@ def cli():
             elif cmd == 'cp' and ACTIVE_FILESERVER:
                 (ses_key, enc_ses_key) = get_session_key()
                 ses_suite = Fernet(ses_key)
-                file_1 = ses_suite.encrypt(tokens[1].encode())
-                file_2 = ses_suite.encrypt(tokens[2].encode())
+                file_1 = ses_suite.encrypt(encode_data(tokens[1]))
+                file_2 = ses_suite.encrypt(encode_data(tokens[2]))
                 nonce2 = secrets.randbelow(100)
-                nonce_enc = ses_suite.encrypt(f'{nonce2}'.encode())
+                nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
                 resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, enc_ses_key)
 
                 msg_enc = resp['message']
                 nonce_recv_enc = resp['nonce']
-                msg = ses_suite.decrypt(f'{msg_enc}'.encode()).decode()
-                nonce_recv = ses_suite.decrypt(f'{nonce_recv_enc}'.encode()).decode()
+                msg = ses_suite.decrypt(encode_data(msg_enc)).decode()
+                nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
                 verify_nonce_handler(nonce2, nonce_recv)
 
@@ -201,25 +202,25 @@ def cli():
             elif cmd == 'cat' and ACTIVE_FILESERVER:
                 (ses_key, enc_ses_key) = get_session_key()
                 ses_suite = Fernet(ses_key)
-                file_arg = ses_suite.encrypt(tokens[1].encode())
+                file_arg = ses_suite.encrypt(encode_data(tokens[1]))
                 nonce2 = secrets.randbelow(100)
-                nonce_enc = ses_suite.encrypt(f'{nonce2}'.encode())
+                nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
                 resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
                 # nonce_recv = resp['nonce']
                 nonce_recv_enc = resp['nonce']
-                nonce_recv = ses_suite.decrypt(f'{nonce_recv_enc}'.encode()).decode()
+                nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
                 verify_nonce_handler(nonce2, nonce_recv)
 
                 # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                 if resp['success'] is True:
                     dec_data = resp['data']
-                    dec_data = ses_suite.decrypt(f'{dec_data}'.encode()).decode()
+                    dec_data = ses_suite.decrypt(encode_data(dec_data)).decode()
                     print(dec_data)
                 else:
                     dec_msg = resp['message']
-                    dec_msg = ses_suite.decrypt(f'{dec_msg}'.encode()).decode()
+                    dec_msg = ses_suite.decrypt(encode_data(dec_msg)).decode()
                     print(dec_msg)
 
             elif cmd == 'cd':
@@ -231,7 +232,7 @@ def cli():
             elif cmd == 'test':
                 (ses_key, enc_ses_key) = get_session_key()
                 ses_suite = Fernet(ses_key)
-                payload_arg = ses_suite.encrypt(tokens[1].encode())
+                payload_arg = ses_suite.encrypt(encode_data(tokens[1]))
                 recv_dict = ACTIVE_FILESERVER.test(payload_arg, enc_ses_key)
                 print(recv_dict)
 

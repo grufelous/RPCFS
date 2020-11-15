@@ -2,6 +2,7 @@ from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
 from utils.config import LOCALHOST, COORDINATOR_PORT
+from utils.fernet_helper import encode_data, decode_data
 
 from cryptography.fernet import Fernet
 
@@ -40,9 +41,9 @@ def get_enc_session_key(offset_a, port_b, nonce):
     key_as_suite = Fernet(key_as)
     key_bs_suite = Fernet(key_bs)
     for_a = {
-        'port_b': key_as_suite.encrypt(f'{port_b}'.encode()),
+        'port_b': key_as_suite.encrypt(encode_data(port_b)),
         'key_ab': key_as_suite.encrypt(key_ab),
-        'nonce': key_as_suite.encrypt(f'{nonce}'.encode()),
+        'nonce': key_as_suite.encrypt(encode_data(nonce)),
         }
     for_b = {
         'key_ab': key_bs_suite.encrypt(key_ab)
