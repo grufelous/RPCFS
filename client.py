@@ -12,6 +12,7 @@ from cryptography.fernet import Fernet
 from utils.reply import Reply
 from utils.config import URI, COORDINATOR_LOCATION
 from utils.fernet_helper import encode_data, decode_data
+from utils.logger import Logger
 
 
 COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
@@ -20,6 +21,7 @@ ACTIVE_FILESERVER = None
 ROOT = Path('/')
 ACTIVE_DIRECTORY = ROOT
 ACTIVE_PORT = 0
+LOG = Logger()
 
 KEY_AS = 0
 KEY_AS_SUITE = None
@@ -88,7 +90,7 @@ def change_active_fileserver(dir: str):
             ACTIVE_FILESERVER = ServerProxy(f'{URI}:{port}')
             ACTIVE_DIRECTORY = Path(get_friendly_name(port))
             ACTIVE_PORT = port
-    print('Active port: ', ACTIVE_PORT)
+    LOG.log(f'Active port: {ACTIVE_PORT}')
 
 
 def is_mount_point_root() -> bool:
