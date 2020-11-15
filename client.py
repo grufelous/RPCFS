@@ -57,7 +57,7 @@ def print_list(data_list: list):
 
 
 def pwd():
-    return str(ACTIVE_DIRECTORY)
+    return str(Path.joinpath(ROOT, ACTIVE_DIRECTORY))
 
 
 def get_friendly_name(port: int):
