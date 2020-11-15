@@ -80,7 +80,7 @@ def change_active_fileserver(dir: str):
     global ACTIVE_DIRECTORY
     global ACTIVE_PORT
     path = Path(dir)
-    if ACTIVE_FILESERVER is not None and path == Path('..'):
+    if path == ROOT or (ACTIVE_FILESERVER is not None and path == Path('..')):
         ACTIVE_FILESERVER = None
         ACTIVE_DIRECTORY = ROOT
         ACTIVE_PORT = 0
@@ -169,75 +169,79 @@ def cli():
         elif num_tokens != supported_commands[cmd]:
             print(f'Syntax error: {cmd}: argument mismatch')
         else:
-            if cmd == 'help':
-                help_message()
+            try:
+                if cmd == 'help':
+                    help_message()
 
-            elif cmd == 'pwd':
-                print(pwd())
+                elif cmd == 'pwd':
+                    print(pwd())
 
-            elif cmd == 'ls':
-                if is_mount_point_root():
-                    update_fileservers()
-                    print_list(map(get_friendly_name, FILESERVERS))
-                else:
-                    print_list(ACTIVE_FILESERVER.list_directory()['data'])
+                elif cmd == 'ls':
+                    if is_mount_point_root():
+                        update_fileservers()
+                        print_list(map(get_friendly_name, FILESERVERS))
+                    else:
+                        print_list(ACTIVE_FILESERVER.list_directory()['data'])
 
-            elif cmd == 'cp' and ACTIVE_FILESERVER:
-                (ses_key, enc_ses_key) = get_session_key()
-                ses_suite = Fernet(ses_key)
-                file_1 = ses_suite.encrypt(encode_data(tokens[1]))
-                file_2 = ses_suite.encrypt(encode_data(tokens[2]))
-                nonce2 = secrets.randbelow(100)
-                nonce_enc = ses_suite.encrypt(encode_data(nonce2))
+                elif cmd == 'cp' and ACTIVE_FILESERVER:
+                    (ses_key, enc_ses_key) = get_session_key()
+                    ses_suite = Fernet(ses_key)
+                    file_1 = ses_suite.encrypt(encode_data(tokens[1]))
+                    file_2 = ses_suite.encrypt(encode_data(tokens[2]))
+                    nonce2 = secrets.randbelow(100)
+                    nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
-                resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, enc_ses_key)
+                    resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, enc_ses_key)
 
-                msg_enc = resp['message']
-                nonce_recv_enc = resp['nonce']
-                msg = ses_suite.decrypt(encode_data(msg_enc)).decode()
-                nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
+                    msg_enc = resp['message']
+                    nonce_recv_enc = resp['nonce']
+                    msg = ses_suite.decrypt(encode_data(msg_enc)).decode()
+                    nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
-                verify_nonce_handler(nonce2, nonce_recv)
+                    verify_nonce_handler(nonce2, nonce_recv)
 
-                print(msg)
-                # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
+                    print(msg)
+                    # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
 
-            elif cmd == 'cat' and ACTIVE_FILESERVER:
-                (ses_key, enc_ses_key) = get_session_key()
-                ses_suite = Fernet(ses_key)
-                file_arg = ses_suite.encrypt(encode_data(tokens[1]))
-                nonce2 = secrets.randbelow(100)
-                nonce_enc = ses_suite.encrypt(encode_data(nonce2))
+                elif cmd == 'cat' and ACTIVE_FILESERVER:
+                    (ses_key, enc_ses_key) = get_session_key()
+                    ses_suite = Fernet(ses_key)
+                    file_arg = ses_suite.encrypt(encode_data(tokens[1]))
+                    nonce2 = secrets.randbelow(100)
+                    nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
-                resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
-                # nonce_recv = resp['nonce']
-                nonce_recv_enc = resp['nonce']
-                nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
+                    resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
+                    # nonce_recv = resp['nonce']
+                    nonce_recv_enc = resp['nonce']
+                    nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
-                verify_nonce_handler(nonce2, nonce_recv)
+                    verify_nonce_handler(nonce2, nonce_recv)
 
-                # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
-                if resp['success'] is True:
-                    dec_data = resp['data']
-                    dec_data = ses_suite.decrypt(encode_data(dec_data)).decode()
-                    print(dec_data)
-                else:
-                    dec_msg = resp['message']
-                    dec_msg = ses_suite.decrypt(encode_data(dec_msg)).decode()
-                    print(dec_msg)
+                    # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
+                    if resp['success'] is True:
+                        dec_data = resp['data']
+                        dec_data = ses_suite.decrypt(encode_data(dec_data)).decode()
+                        print(dec_data)
+                    else:
+                        dec_msg = resp['message']
+                        dec_msg = ses_suite.decrypt(encode_data(dec_msg)).decode()
+                        print(dec_msg)
 
-            elif cmd == 'cd':
-                change_active_fileserver(tokens[1])
+                elif cmd == 'cd':
+                    change_active_fileserver(tokens[1])
 
-            elif cmd == 'exit':
-                exit()
+                elif cmd == 'exit':
+                    exit()
 
-            elif cmd == 'test':
-                (ses_key, enc_ses_key) = get_session_key()
-                ses_suite = Fernet(ses_key)
-                payload_arg = ses_suite.encrypt(encode_data(tokens[1]))
-                recv_dict = ACTIVE_FILESERVER.test(payload_arg, enc_ses_key)
-                print(recv_dict)
+                elif cmd == 'test':
+                    (ses_key, enc_ses_key) = get_session_key()
+                    ses_suite = Fernet(ses_key)
+                    payload_arg = ses_suite.encrypt(encode_data(tokens[1]))
+                    recv_dict = ACTIVE_FILESERVER.test(payload_arg, enc_ses_key)
+                    print(recv_dict)
+            except ConnectionRefusedError:
+                print(f'{cmd}: Error in fetching files')
+                change_active_fileserver(ROOT)
 
 
 def set_client_key(client_offset):
