@@ -15,7 +15,7 @@ CLIENT_KEYS = list()
 
 def add_fs(fs_port):
     if fs_port in FILESERVERS:
-        return 'Port occupied'
+        return f'Port {fs_port} occupied'
     FILESERVERS.append(fs_port)
     print('Active fs: ', FILESERVERS)
     return f'Started fs at port {fs_port}'
@@ -23,7 +23,7 @@ def add_fs(fs_port):
 
 def remove_fs(fs_port):
     if fs_port not in FILESERVERS:
-        return 'Port already removed'
+        return f'Port {fs_port} already removed'
     FILESERVERS.remove(fs_port)
     print('Active fs: ', FILESERVERS)
     return f'Closed fs at port {fs_port}'
@@ -35,6 +35,7 @@ def get_fs():
 
 def get_enc_session_key(offset_a, port_b, nonce):
     key_ab = Fernet.generate_key()
+    print(f'Generating session key for client {offset_a} and fs {port_b}')
     print(f'Kab: {key_ab}')
     key_as = CLIENT_KEYS[offset_a % 10]
     key_bs = FS_KEYS[port_b % 10]
@@ -44,7 +45,7 @@ def get_enc_session_key(offset_a, port_b, nonce):
         'port_b': key_as_suite.encrypt(encode_data(port_b)),
         'key_ab': key_as_suite.encrypt(key_ab),
         'nonce': key_as_suite.encrypt(encode_data(nonce)),
-        }
+    }
     for_b = {
         'key_ab': key_bs_suite.encrypt(key_ab)
     }
@@ -65,6 +66,7 @@ def read_keys():
                 FS_KEYS.append(line.rstrip().encode())
     except OSError:
         print('Coordinator unable to read fs_keys')
+        raise
 
     try:
         with open('keys/client_keys.txt', 'r') as client_keys:
@@ -72,6 +74,7 @@ def read_keys():
                 CLIENT_KEYS.append(line.rstrip().encode())
     except OSError:
         print('Coordinator unable to read client_keys')
+        raise
 
 
 if __name__ == '__main__':
@@ -80,10 +83,14 @@ if __name__ == '__main__':
     SERVER.register_function(get_fs)
     SERVER.register_function(get_enc_session_key)
 
-    read_keys()
+    try:
+        read_keys()
+    except OSError:
+        print('Coordinator unable to read one or more of fs_keys or client_keys. Exiting...')
+        exit()
 
     try:
-        print('Central coordinator started at port 3000')
+        print(f'Central coordinator started at port {COORDINATOR_PORT}')
         SERVER.serve_forever()
     except KeyboardInterrupt:
         print('Coordinator terminated')
