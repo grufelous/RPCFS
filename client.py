@@ -270,7 +270,6 @@ if __name__ == '__main__':
 
     try:
         set_client_key(client_offset % 10)
-        update_fileservers()
         while True:
             cli()
     except KeyboardInterrupt:
