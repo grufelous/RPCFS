@@ -9,7 +9,7 @@ import sys
 from cryptography.fernet import Fernet
 
 from utils.reply import Reply
-from utils.config import COORDINATOR_LOCATION
+from utils.config import COORDINATOR_LOCATION, LOCALHOST
 from utils.fernet_helper import encode_data, decode_data
 
 
@@ -148,7 +148,7 @@ if __name__ == '__main__':
 
     while fs_port_found is False and max_tries:
         try:
-            server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
+            server = SimpleXMLRPCServer((LOCALHOST, fs_port), logRequests=True)
             fs_port_found = True
         except OSError:
             fs_port += 1
