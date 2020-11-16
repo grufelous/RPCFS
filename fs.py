@@ -9,7 +9,8 @@ import sys
 from cryptography.fernet import Fernet
 
 from utils.reply import Reply
-from utils.config import COORDINATOR_LOCATION
+from utils.config import COORDINATOR_LOCATION, LOCALHOST
+from utils.fernet_helper import encode_data, decode_data
 
 
 COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
@@ -33,9 +34,9 @@ def list_directory():
 def copy_file(f1, f2, nonce, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
 
-    src = ses_suite.decrypt(f'{f1}'.encode()).decode()
-    dest = ses_suite.decrypt(f'{f2}'.encode()).decode()
-    dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    src = ses_suite.decrypt(encode_data(f1)).decode()
+    dest = ses_suite.decrypt(encode_data(f2)).decode()
+    dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
 
     print(f'src: {src}, dest: {dest}, nonce: {dec_nonce}')
@@ -57,19 +58,19 @@ def copy_file(f1, f2, nonce, payload_ses):
         message = 'Error: Permission denied'
     except Exception:
         message = 'Error while copying file'
-    message = ses_suite.encrypt(message.encode())
-    nonce = ses_suite.encrypt(dec_nonce.encode())
+    message = ses_suite.encrypt(encode_data(message))
+    nonce = ses_suite.encrypt(encode_data(dec_nonce))
     return Reply(success=success, message=message, nonce=nonce)
 
 
 def cat(file_arg, nonce, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
 
-    file_name = ses_suite.decrypt(f'{file_arg}'.encode()).decode()
-    dec_nonce = ses_suite.decrypt(f'{nonce}'.encode()).decode()
+    file_name = ses_suite.decrypt(encode_data(file_arg)).decode()
+    dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
 
-    nonce = ses_suite.encrypt(dec_nonce.encode())
+    nonce = ses_suite.encrypt(encode_data(dec_nonce))
 
     success = False
 
@@ -77,19 +78,19 @@ def cat(file_arg, nonce, payload_ses):
         f = open(file_name, 'r')
         text = f.read()
         f.close()
-        text_enc = ses_suite.encrypt(text.encode())
+        text_enc = ses_suite.encrypt(encode_data(text))
         return Reply(success=True, data=text_enc, nonce=nonce)
     except FileNotFoundError:
         message = 'Error: File does not exist'
     except Exception:
         message = 'Error while reading file'
-    message = ses_suite.encrypt(message.encode())
+    message = ses_suite.encrypt(encode_data(message))
     return Reply(success=False, message=message, nonce=nonce)
 
 
 def extract_ses_key(payload_ses):
-    ses_key_recv = payload_ses['key_ab']
-    ses_key = KEY_BS_SUITE.decrypt(f'{ses_key_recv}'.encode()).decode()
+    ses_key_enc = payload_ses['key_ab']
+    ses_key = KEY_BS_SUITE.decrypt(encode_data(ses_key_enc)).decode()
     print('Kab: ', ses_key)
     return (ses_key, Fernet(ses_key))
 
@@ -98,7 +99,7 @@ def test(payload_arg, payload_ses):
     print(payload_ses)
     # nonce_recv = payload_arg['nonce']
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
-    pay_arg_dec = ses_suite.decrypt(f'{payload_arg}'.encode()).decode()
+    pay_arg_dec = ses_suite.decrypt(encode_data(payload_arg)).decode()
     print(pay_arg_dec)
     test_resp = {
         'pay_arg': pay_arg_dec
@@ -128,9 +129,6 @@ def set_server_key(fs_port_offset):
 
     print(f'Key for server: {KEY_BS}')
     KEY_BS_SUITE = Fernet(KEY_BS)
-    # enc = KEY_BS_SUITE.encrypt('abc'.encode())
-    # dec = KEY_BS_SUITE.decrypt(enc).decode()
-    # print(dec)
 
 
 if __name__ == '__main__':
@@ -150,7 +148,7 @@ if __name__ == '__main__':
 
     while fs_port_found is False and max_tries:
         try:
-            server = SimpleXMLRPCServer(('localhost', fs_port), logRequests=True)
+            server = SimpleXMLRPCServer((LOCALHOST, fs_port), logRequests=True)
             fs_port_found = True
         except OSError:
             fs_port += 1
@@ -162,16 +160,16 @@ if __name__ == '__main__':
 
     set_server_key(fs_port % 10)
 
-    if os.path.isdir('fs_{}'.format(fs_port)) is False:
-        os.mkdir('fs_{}'.format(fs_port))
-    os.chdir('fs_{}'.format(fs_port))
+    if os.path.isdir(f'fs_{fs_port}') is False:
+        os.mkdir(f'fs_{fs_port}')
+    os.chdir(f'fs_{fs_port}')
 
     register_fs_functions(server)
 
     print(COORDINATOR.add_fs(fs_port))
 
     try:
-        print('File server started at port {}'.format(fs_port))
+        print(f'File server started at port {fs_port}')
         server.serve_forever()
     except KeyboardInterrupt:
         print(COORDINATOR.remove_fs(fs_port))
