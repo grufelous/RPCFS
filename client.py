@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 
 from utils.reply import Reply
 from utils.config import URI, COORDINATOR_LOCATION
-from utils.fernet_helper import encode_data, decode_data
+from utils.fernet_helper import encode_data, decode_data, deserialize_list
 from utils.logger import Logger
 
 
@@ -48,7 +48,6 @@ def help_message():
     print('\thelp')
     print('\tcd')
     print('\texit')
-    print('Use full paths as needed')
 
 
 def print_list(data_list: list):
@@ -75,11 +74,15 @@ def get_port_from_friendly_name(name: str) -> int:
 
 
 def change_active_fileserver(dir: str):
+    path = Path(dir)
+
+    if path == Path('.'):
+        return
+
     global FILESERVERS
     global ACTIVE_FILESERVER
     global ACTIVE_DIRECTORY
     global ACTIVE_PORT
-    path = Path(dir)
     if path == ROOT or (ACTIVE_FILESERVER is not None and path == Path('..')):
         ACTIVE_FILESERVER = None
         ACTIVE_DIRECTORY = ROOT
@@ -118,7 +121,7 @@ def verify_nonce(sent_nonce: int, received_nonce: str) -> bool:
 def verify_nonce_handler(sent_nonce: int, received_nonce: str, is_coord: bool = False):
     b = 'coordinator' if is_coord else 'client'
     if verify_nonce(sent_nonce, received_nonce) is True:
-        print(f'Nonce verified for client/{b} phase')
+        LOG.log(f'Nonce verified for client/{b} phase')
     else:
         print(f'Nonce not verified for client/{b} phase')
         print('Imposter detected')
@@ -147,10 +150,9 @@ def get_session_key(nonce=42):
 
     verify_nonce_handler(nonce, nonce_dec, True)
 
-    print(f'Session key (Kab): {ses_key}')
+    LOG.log(f'Session key (Kab): {ses_key}')
 
     for_fs = ses['for_b']
-    # print(ses)
     return (ses_key, for_fs)
 
 
@@ -181,7 +183,22 @@ def cli():
                         update_fileservers()
                         print_list(map(get_friendly_name, FILESERVERS))
                     else:
-                        print_list(ACTIVE_FILESERVER.list_directory()['data'])
+                        (ses_key, enc_ses_key) = get_session_key()
+                        ses_suite = Fernet(ses_key)
+                        nonce2 = secrets.randbelow(100)
+                        nonce_enc = ses_suite.encrypt(encode_data(nonce2))
+
+                        resp = ACTIVE_FILESERVER.list_directory(nonce_enc, enc_ses_key)
+
+                        files_enc = resp['data']
+                        nonce_recv_enc = resp['nonce']
+                        files = ses_suite.decrypt(encode_data(files_enc)).decode()
+                        files = deserialize_list(files)
+                        nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
+
+                        verify_nonce_handler(nonce2, nonce_recv)
+
+                        print_list(files)
 
                 elif cmd == 'cp' and ACTIVE_FILESERVER:
                     (ses_key, enc_ses_key) = get_session_key()
@@ -201,7 +218,6 @@ def cli():
                     verify_nonce_handler(nonce2, nonce_recv)
 
                     print(msg)
-                    # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
 
                 elif cmd == 'cat' and ACTIVE_FILESERVER:
                     (ses_key, enc_ses_key) = get_session_key()
@@ -211,13 +227,11 @@ def cli():
                     nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
                     resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
-                    # nonce_recv = resp['nonce']
                     nonce_recv_enc = resp['nonce']
                     nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
                     verify_nonce_handler(nonce2, nonce_recv)
 
-                    # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                     if resp['success'] is True:
                         dec_data = resp['data']
                         dec_data = ses_suite.decrypt(encode_data(dec_data)).decode()
