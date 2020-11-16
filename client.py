@@ -74,11 +74,15 @@ def get_port_from_friendly_name(name: str) -> int:
 
 
 def change_active_fileserver(dir: str):
+    path = Path(dir)
+
+    if path == Path('.'):
+        return
+
     global FILESERVERS
     global ACTIVE_FILESERVER
     global ACTIVE_DIRECTORY
     global ACTIVE_PORT
-    path = Path(dir)
     if path == ROOT or (ACTIVE_FILESERVER is not None and path == Path('..')):
         ACTIVE_FILESERVER = None
         ACTIVE_DIRECTORY = ROOT
