@@ -118,7 +118,7 @@ def verify_nonce(sent_nonce: int, received_nonce: str) -> bool:
 def verify_nonce_handler(sent_nonce: int, received_nonce: str, is_coord: bool = False):
     b = 'coordinator' if is_coord else 'client'
     if verify_nonce(sent_nonce, received_nonce) is True:
-        print(f'Nonce verified for client/{b} phase')
+        LOG.log(f'Nonce verified for client/{b} phase')
     else:
         print(f'Nonce not verified for client/{b} phase')
         print('Imposter detected')
@@ -147,10 +147,9 @@ def get_session_key(nonce=42):
 
     verify_nonce_handler(nonce, nonce_dec, True)
 
-    print(f'Session key (Kab): {ses_key}')
+    LOG.log(f'Session key (Kab): {ses_key}')
 
     for_fs = ses['for_b']
-    # print(ses)
     return (ses_key, for_fs)
 
 
