@@ -10,7 +10,7 @@ from cryptography.fernet import Fernet
 
 from utils.reply import Reply
 from utils.config import COORDINATOR_LOCATION, LOCALHOST
-from utils.fernet_helper import encode_data, decode_data
+from utils.fernet_helper import encode_data, decode_data, serialize_list
 
 
 COORDINATOR = ServerProxy(COORDINATOR_LOCATION)
@@ -27,8 +27,19 @@ def present_working_directory():
     return Reply(success=True, data=os.getcwd())
 
 
-def list_directory():
-    return Reply(success=True, data=os.listdir(os.getcwd()))
+def list_directory(nonce, payload_ses):
+    (ses_key, ses_suite) = extract_ses_key(payload_ses)
+
+    dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
+    dec_nonce = nonce_mod(dec_nonce)
+
+    nonce = ses_suite.encrypt(encode_data(dec_nonce))
+
+    files = os.listdir(os.getcwd())
+    files = serialize_list(files)
+    files = ses_suite.encrypt(encode_data(files))
+
+    return Reply(success=True, nonce=nonce, data=files)
 
 
 def copy_file(f1, f2, nonce, payload_ses):
