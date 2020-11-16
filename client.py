@@ -48,7 +48,6 @@ def help_message():
     print('\thelp')
     print('\tcd')
     print('\texit')
-    print('Use full paths as needed')
 
 
 def print_list(data_list: list):
