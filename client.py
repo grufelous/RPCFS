@@ -11,7 +11,7 @@ from cryptography.fernet import Fernet
 
 from utils.reply import Reply
 from utils.config import URI, COORDINATOR_LOCATION
-from utils.fernet_helper import encode_data, decode_data
+from utils.fernet_helper import encode_data, decode_data, deserialize_list
 from utils.logger import Logger
 
 
@@ -181,7 +181,22 @@ def cli():
                         update_fileservers()
                         print_list(map(get_friendly_name, FILESERVERS))
                     else:
-                        print_list(ACTIVE_FILESERVER.list_directory()['data'])
+                        (ses_key, enc_ses_key) = get_session_key()
+                        ses_suite = Fernet(ses_key)
+                        nonce2 = secrets.randbelow(100)
+                        nonce_enc = ses_suite.encrypt(encode_data(nonce2))
+
+                        resp = ACTIVE_FILESERVER.list_directory(nonce_enc, enc_ses_key)
+
+                        files_enc = resp['data']
+                        nonce_recv_enc = resp['nonce']
+                        files = ses_suite.decrypt(encode_data(files_enc)).decode()
+                        files = deserialize_list(files)
+                        nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
+
+                        verify_nonce_handler(nonce2, nonce_recv)
+
+                        print_list(files)
 
                 elif cmd == 'cp' and ACTIVE_FILESERVER:
                     (ses_key, enc_ses_key) = get_session_key()
@@ -201,7 +216,6 @@ def cli():
                     verify_nonce_handler(nonce2, nonce_recv)
 
                     print(msg)
-                    # print(ACTIVE_FILESERVER.copy_file(tokens[1], tokens[2])['message'])
 
                 elif cmd == 'cat' and ACTIVE_FILESERVER:
                     (ses_key, enc_ses_key) = get_session_key()
@@ -211,13 +225,11 @@ def cli():
                     nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
                     resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
-                    # nonce_recv = resp['nonce']
                     nonce_recv_enc = resp['nonce']
                     nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 
                     verify_nonce_handler(nonce2, nonce_recv)
 
-                    # resp = dict(ACTIVE_FILESERVER.cat(tokens[1]))
                     if resp['success'] is True:
                         dec_data = resp['data']
                         dec_data = ses_suite.decrypt(encode_data(dec_data)).decode()
