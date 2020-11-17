@@ -54,8 +54,6 @@ def copy_file(f1, f2, nonce, payload_ses):
 
     success = False
 
-    if os.path.isfile(src) is False:
-        message = 'Error: src file ({}) does not exist'.format(src)
     try:
         shutil.copyfile(src, dest)
         message = 'Successfully copied'
@@ -67,6 +65,8 @@ def copy_file(f1, f2, nonce, payload_ses):
         message = 'Error: Copying folders not allowed'
     except PermissionError:
         message = 'Error: Permission denied'
+    except IOError:
+        message = f'Error: src file ({src}) does not exist'
     except Exception:
         message = 'Error while copying file'
     message = ses_suite.encrypt(encode_data(message))
