@@ -1,4 +1,5 @@
 import re
+from os import system, name
 from pathlib import Path
 
 import sys
@@ -34,6 +35,7 @@ supported_commands = {
     'cat': 1,
     'help': 0,
     'cd': 1,
+    'clear': 0,
     'exit': 0,
     'test': 1,
 }
@@ -47,6 +49,7 @@ def help_message():
     print('\tcat <file>')
     print('\thelp')
     print('\tcd')
+    print('\tclear')
     print('\texit')
 
 
@@ -156,6 +159,13 @@ def get_session_key(nonce=42):
     return (ses_key, for_fs)
 
 
+def clear_screen():
+    if name == 'nt':
+        _ = system('cls')
+    else:
+        _ = system('clear')
+
+
 # def encrypt_for_ses()
 def cli():
     str_inp = input('client> ')
@@ -246,6 +256,9 @@ def cli():
 
                 elif cmd == 'exit':
                     exit()
+
+                elif cmd == 'clear':
+                    clear_screen()
 
                 elif cmd == 'test':
                     (ses_key, enc_ses_key) = get_session_key()
