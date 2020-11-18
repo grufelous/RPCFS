@@ -29,6 +29,9 @@ def present_working_directory():
 
 def list_directory(nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
@@ -46,6 +49,9 @@ def list_directory(nonce, client_id, payload_ses):
 
 def copy_file(f1, f2, nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     src = ses_suite.decrypt(encode_data(f1)).decode()
     dest = ses_suite.decrypt(encode_data(f2)).decode()
@@ -78,6 +84,9 @@ def copy_file(f1, f2, nonce, client_id, payload_ses):
 
 def cat(file_arg, nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     file_name = ses_suite.decrypt(encode_data(file_arg)).decode()
     dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
@@ -108,6 +117,16 @@ def extract_ses_key(payload_ses):
     ses_key = KEY_BS_SUITE.decrypt(encode_data(ses_key_enc)).decode()
     print('Kab: ', ses_key)
     return (ses_key, Fernet(ses_key))
+
+
+def extract_asking_client_id(payload_ses):
+    client_id_enc = payload_ses['client_id']
+    client_id = KEY_BS_SUITE.decrypt(encode_data(client_id_enc)).decode()
+    try:
+        client_id = int(client_id)
+    except ValueError:
+        client_id = None
+    return client_id
 
 
 def test(payload_arg, payload_ses):

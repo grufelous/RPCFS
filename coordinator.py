@@ -47,6 +47,7 @@ def get_enc_session_key(offset_a, port_b, nonce):
         'nonce': key_as_suite.encrypt(encode_data(nonce)),
     }
     for_b = {
+        'client_id': key_bs_suite.encrypt(encode_data(offset_a)),
         'key_ab': key_bs_suite.encrypt(key_ab)
     }
     resp = {
