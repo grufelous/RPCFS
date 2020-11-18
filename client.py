@@ -303,7 +303,15 @@ if __name__ == '__main__':
             exit()
 
     try:
+        auth_status = COORDINATOR.register_client(client_offset)
+        if auth_status:
+            print(f'Client ({client_offset}) successfully registered & authenticated')
+        else:
+            print(f'Client ({client_offset}) not successfully registered or authenticated')
+            exit()
+
         set_client_key(client_offset % 10)
+
         update_fileservers()
         while True:
             cli()

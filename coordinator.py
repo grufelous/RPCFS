@@ -17,7 +17,7 @@ def add_fs(fs_port):
         return f'Port {fs_port} occupied'
     FILESERVERS.append(fs_port)
     print('Active fs: ', FILESERVERS)
-    return f'Started fs at port {fs_port}'
+    return f'KDC registered FS at port {fs_port}'
 
 
 def remove_fs(fs_port):
@@ -30,6 +30,16 @@ def remove_fs(fs_port):
 
 def get_fs():
     return FILESERVERS
+
+
+def register_client(offset_a):
+    try:
+        offset_a = int(offset_a)
+    except ValueError:
+        return False
+    if offset_a >= 10:
+        return False
+    return True
 
 
 def get_enc_session_key(offset_a, port_b, nonce):
@@ -82,6 +92,7 @@ if __name__ == '__main__':
     SERVER.register_function(remove_fs)
     SERVER.register_function(get_fs)
     SERVER.register_function(get_enc_session_key)
+    SERVER.register_function(register_client)
 
     try:
         read_keys()
