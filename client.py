@@ -198,7 +198,7 @@ def cli():
                         nonce2 = secrets.randbelow(100)
                         nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
-                        resp = ACTIVE_FILESERVER.list_directory(nonce_enc, enc_ses_key)
+                        resp = ACTIVE_FILESERVER.list_directory(nonce_enc, OFFSET_A, enc_ses_key)
 
                         files_enc = resp['data']
                         nonce_recv_enc = resp['nonce']
@@ -218,7 +218,7 @@ def cli():
                     nonce2 = secrets.randbelow(100)
                     nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
-                    resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, enc_ses_key)
+                    resp = ACTIVE_FILESERVER.copy_file(file_1, file_2, nonce_enc, OFFSET_A, enc_ses_key)
 
                     msg_enc = resp['message']
                     nonce_recv_enc = resp['nonce']
@@ -236,7 +236,7 @@ def cli():
                     nonce2 = secrets.randbelow(100)
                     nonce_enc = ses_suite.encrypt(encode_data(nonce2))
 
-                    resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, enc_ses_key)
+                    resp = ACTIVE_FILESERVER.cat(file_arg, nonce_enc, OFFSET_A, enc_ses_key)
                     nonce_recv_enc = resp['nonce']
                     nonce_recv = ses_suite.decrypt(encode_data(nonce_recv_enc)).decode()
 

@@ -27,11 +27,16 @@ def present_working_directory():
     return Reply(success=True, data=os.getcwd())
 
 
-def list_directory(nonce, payload_ses):
+def list_directory(nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
+
+    print(f'[ls] Executing ls for {client_id}')
 
     nonce = ses_suite.encrypt(encode_data(dec_nonce))
 
@@ -42,15 +47,18 @@ def list_directory(nonce, payload_ses):
     return Reply(success=True, nonce=nonce, data=files)
 
 
-def copy_file(f1, f2, nonce, payload_ses):
+def copy_file(f1, f2, nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     src = ses_suite.decrypt(encode_data(f1)).decode()
     dest = ses_suite.decrypt(encode_data(f2)).decode()
     dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
 
-    print(f'[cp] src: {src}, dest: {dest}')
+    print(f'[cp] Executing cp with src: {src}, dest: {dest} for {client_id}')
 
     success = False
 
@@ -74,12 +82,17 @@ def copy_file(f1, f2, nonce, payload_ses):
     return Reply(success=success, message=message, nonce=nonce)
 
 
-def cat(file_arg, nonce, payload_ses):
+def cat(file_arg, nonce, client_id, payload_ses):
     (ses_key, ses_suite) = extract_ses_key(payload_ses)
+    asking_client_id = extract_asking_client_id(payload_ses)
+
+    assert(asking_client_id == client_id)
 
     file_name = ses_suite.decrypt(encode_data(file_arg)).decode()
     dec_nonce = ses_suite.decrypt(encode_data(nonce)).decode()
     dec_nonce = nonce_mod(dec_nonce)
+
+    print(f'[cat] Executing cat with file: {file_name} for {client_id}')
 
     nonce = ses_suite.encrypt(encode_data(dec_nonce))
 
@@ -104,6 +117,16 @@ def extract_ses_key(payload_ses):
     ses_key = KEY_BS_SUITE.decrypt(encode_data(ses_key_enc)).decode()
     print('Kab: ', ses_key)
     return (ses_key, Fernet(ses_key))
+
+
+def extract_asking_client_id(payload_ses):
+    client_id_enc = payload_ses['client_id']
+    client_id = KEY_BS_SUITE.decrypt(encode_data(client_id_enc)).decode()
+    try:
+        client_id = int(client_id)
+    except ValueError:
+        client_id = None
+    return client_id
 
 
 def test(payload_arg, payload_ses):
