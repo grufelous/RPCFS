@@ -1,4 +1,3 @@
-from xmlrpc.client import ServerProxy
 from xmlrpc.server import SimpleXMLRPCServer
 
 from utils.config import LOCALHOST, COORDINATOR_PORT
