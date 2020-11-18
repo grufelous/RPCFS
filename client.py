@@ -37,7 +37,7 @@ supported_commands = {
     'cd': 1,
     'clear': 0,
     'exit': 0,
-    'test': 1,
+    # 'test': 1,
 }
 
 
